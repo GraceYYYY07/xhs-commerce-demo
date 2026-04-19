@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书搜索 · 商业化卡片概念验证</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red: #FF2442;
+  --red-soft: #FFF0F2;
+  --red-mid: #FFD6DB;
+  --ink: #1a1a1a;
+  --ink2: #555;
+  --ink3: #999;
+  --ink4: #bbb;
+  --line: #efefef;
+  --bg: #f7f7f7;
+  --white: #fff;
+  --radius: 12px;
+  --gold: #F59E0B;
+}
+
+body {
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* TOP BAR */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+
+.search-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border-radius: 20px;
+  padding: 8px 14px;
+  gap: 8px;
+  border: 1.5px solid transparent;
+  transition: border-color 0.15s;
+}
+.search-bar:focus-within { border-color: var(--red); background: var(--white); }
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  outline: none;
+}
+.search-bar input::placeholder { color: var(--ink4); }
+
+.search-icon { color: var(--ink3); font-size: 16px; cursor: pointer; }
+
+.btn-search {
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.btn-search:hover { opacity: 0.88; }
+
+/* TABS */
+.tabs {
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 0;
+  padding: 0 16px;
+  overflow-x: auto;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--ink3);
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.tab.active { color: var(--red); border-bottom-color: var(--red); font-weight: 500; }
+
+/* MAIN LAYOUT */
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 12px 40px;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--ink3);
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state h3 { font-size: 16px; color: var(--ink2); margin-bottom: 8px; font-weight: 500; }
+.empty-state p { font-size: 13px; line-height: 1.6; }
+
+.hot-searches {
+  margin-top: 24px;
+  text-align: left;
+}
+.hot-label { font-size: 12px; color: var(--ink3); margin-bottom: 10px; }
+.hot-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.hot-chip {
+  padding: 6px 14px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.hot-chip:hover { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+
+/* RESULTS */
+.results { display: none; }
+.results.show { display: block; }
+
+/* LOADING */
+.loading-state {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink3);
+}
+.loading-state.show { display: block; }
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--line);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* RESULT STATS */
+.result-stats {
+  font-size: 12px;
+  color: var(--ink3);
+  padding: 10px 0 8px;
+}
+
+/* NOTE CARD */
+.note-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+
+.note-thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+.note-body { flex: 1; min-width: 0; }
+.note-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  margin-bottom: 5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.note-desc {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.note-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--ink4);
+}
+.note-avatar {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: white;
+  flex-shrink: 0;
+}
+.note-author { color: var(--ink3); }
+.note-likes { display: flex; align-items: center; gap: 3px; }
+
+/* ===== COMMERCE CARD ===== */
+.commerce-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+  border: 1.5px solid #FFD6DB;
+  animation: slideIn 0.4s ease;
+  position: relative;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.commerce-header {
+  background: linear-gradient(135deg, #FFF0F2 0%, #FFF8F9 100%);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--red-mid);
+}
+
+.commerce-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--red);
+}
+
+.commerce-label-dot {
+  width: 6px; height: 6px;
+  background: var(--red);
+  border-radius: 50%;
+}
+
+.commerce-count {
+  font-size: 11px;
+  color: var(--ink3);
+}
+
+.commerce-items {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.commerce-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #FAFAFA;
+  transition: border-color 0.15s, background 0.15s;
+  cursor: pointer;
+}
+.commerce-item:hover { border-color: var(--red-mid); background: var(--red-soft); }
+
+.item-rank {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: white;
+}
+.rank-1 { background: #F59E0B; }
+.rank-2 { background: #9CA3AF; }
+.rank-3 { background: #CD7C54; }
+.rank-other { background: var(--ink4); }
+
+.item-img {
+  width: 44px; height: 44px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: var(--white);
+  border: 1px solid var(--line);
+}
+
+.item-info { flex: 1; min-width: 0; }
+.item-name {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.item-mention {
+  font-size: 11px;
+  color: var(--ink3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.item-mention-bar {
+  height: 3px;
+  background: var(--red-mid);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.item-mention-fill {
+  height: 100%;
+  background: var(--red);
+  border-radius: 2px;
+}
+
+.item-right { text-align: right; flex-shrink: 0; }
+.item-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 4px;
+}
+.item-price-small { font-size: 11px; font-weight: 400; }
+
+.btn-buy {
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.btn-buy:hover { opacity: 0.88; }
+
+.commerce-footer {
+  padding: 8px 14px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+}
+.commerce-footer-text {
+  font-size: 11px;
+  color: var(--ink4);
+}
+.commerce-more {
+  font-size: 12px;
+  color: var(--red);
+  cursor: pointer;
+}
+
+/* CONCEPT BADGE */
+.concept-badge {
+  position: absolute;
+  top: -1px;
+  right: 12px;
+  background: var(--red);
+  color: white;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 0 0 6px 6px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+/* TOOLTIP */
+.tooltip-wrap {
+  background: #1a1a1a;
+  color: white;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  line-height: 1.7;
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+.tooltip-wrap.show { display: block; }
+.tooltip-title { font-weight: 500; margin-bottom: 4px; font-size: 13px; }
+.tooltip-close {
+  float: right;
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 14px;
+  margin-top: -2px;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">小红书</div>
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索你感兴趣的内容" onkeydown="handleKey(event)">
+  </div>
+  <button class="btn-search" onclick="doSearch()">搜索</button>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active">综合</div>
+  <div class="tab">视频</div>
+  <div class="tab">图文</div>
+  <div class="tab">用户</div>
+  <div class="tab">商品</div>
+</div>
+
+<!-- CONTAINER -->
+<div class="container">
+
+  <!-- EMPTY STATE -->
+  <div class="empty-state" id="emptyState">
+    <div class="icon">🔍</div>
+    <h3>搜索你想要的内容</h3>
+    <p>试试输入护肤品、旅游目的地、美食推荐…<br>AI 会在搜索结果中帮你找到最值得买的</p>
+    <div class="hot-searches">
+      <div class="hot-label">🔥 大家都在搜</div>
+      <div class="hot-chips">
+        <span class="hot-chip" onclick="quickSearch('平价眼霜')">平价眼霜</span>
+        <span class="hot-chip" onclick="quickSearch('敏感肌防晒')">敏感肌防晒</span>
+        <span class="hot-chip" onclick="quickSearch('清迈旅游')">清迈旅游</span>
+        <span class="hot-chip" onclick="quickSearch('氨基酸洗面奶')">氨基酸洗面奶</span>
+        <span class="hot-chip" onclick="quickSearch('成都美食')">成都美食</span>
+        <span class="hot-chip" onclick="quickSearch('精华液推荐')">精华液推荐</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-state" id="loadingState">
+    <div class="spinner"></div>
+    <div style="font-size:14px;color:var(--ink3)">正在分析搜索结果…</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="resultsArea">
+    <div class="result-stats" id="resultStats"></div>
+    <div id="resultsList"></div>
+  </div>
+
+</div>
+
+<script>
+const API_KEY = "sk-1ebd8d23c6b34bcda3998f1f88d0b8a3";
+const API_URL = "https://api.deepseek.com/chat/completions";
+
+let currentQuery = "";
+
+function handleKey(e) {
+  if (e.key === 'Enter') doSearch();
+}
+
+function quickSearch(q) {
+  document.getElementById('searchInput').value = q;
+  doSearch();
+}
+
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  currentQuery = q;
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsArea').classList.remove('show');
+  document.getElementById('loadingState').classList.add('show');
+
+  try {
+    const [notes, commerce] = await Promise.all([
+      generateNotes(q),
+      generateCommerceCard(q)
+    ]);
+
+    document.getElementById('loadingState').classList.remove('show');
+    renderResults(q, notes, commerce);
+  } catch(e) {
+    document.getElementById('loadingState').classList.remove('show');
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('emptyState').innerHTML = `
+      <div class="icon">⚠️</div>
+      <h3>出了点问题</h3>
+      <p style="color:#e74c3c">${e.message}</p>
+      <p style="margin-top:8px;font-size:12px">请检查代码中的 API_KEY 是否已填写</p>`;
+  }
+}
+
+function safeParseJSON(raw) {
+  let text = raw.replace(/```json/g, '').replace(/```/g, '').trim();
+  const firstBrace = text.search(/[\[{]/);
+  const lastBrace = Math.max(text.lastIndexOf(']'), text.lastIndexOf('}'));
+  if (firstBrace !== -1 && lastBrace !== -1) {
+    text = text.slice(firstBrace, lastBrace + 1);
+  }
+  return JSON.parse(text);
+}
+
+async function generateNotes(query) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      max_tokens: 1200,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: '你是一个数据生成助手，只返回合法的JSON，不返回任何其他内容。' },
+        {
+          role: 'user',
+          content: `生成6篇关于"${query}"的小红书笔记摘要，模拟真实搜索结果。
+返回格式：{"notes": [...]}，数组每项包含：
+- title: 笔记标题（25字以内，有吸引力，像真实小红书标题）
+- desc: 一句话摘要（30字以内）
+- author: 博主昵称
+- likes: 点赞数（纯数字，100-9999之间）
+- emoji: 一个代表内容的emoji
+- color: 封面背景色（柔和的十六进制颜色，如#FFF0F2）`
+        }
+      ]
+    })
+  });
+  const data = await res.json();
+  const parsed = safeParseJSON(data.choices[0].message.content);
+  return parsed.notes || parsed;
+}
+
+async function generateCommerceCard(query) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      max_tokens: 800,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: '你是一个数据生成助手，只返回合法的JSON，不返回任何其他内容。' },
+        {
+          role: 'user',
+          content: `用户在小红书搜索了"${query}"。
+生成"笔记高频提及商品"卡片数据，返回JSON对象：
+{
+  "noteCount": 分析的笔记数量（50-500整数）,
+  "items": [3个商品，每个包含name/emoji/price/mentionPct/reason]
+}
+其中每个item：
+- name: 真实品牌+产品名
+- emoji: 代表商品的emoji
+- price: 合理人民币价格（纯数字）
+- mentionPct: 提及占比（0-100整数，第一名最高）
+- reason: 推荐理由（15字以内）`
+        }
+      ]
+    })
+  });
+  const data = await res.json();
+  return safeParseJSON(data.choices[0].message.content);
+}
+
+function renderResults(query, notes, commerce) {
+  document.getElementById('resultStats').textContent =
+    `"${query}" 相关笔记 · 综合排序`;
+
+  const list = document.getElementById('resultsList');
+  list.innerHTML = '';
+
+  // tooltip
+  const tooltip = document.createElement('div');
+  tooltip.className = 'tooltip-wrap show';
+  tooltip.innerHTML = `
+    <span class="tooltip-close" onclick="this.parentElement.classList.remove('show')">✕</span>
+    <div class="tooltip-title">💡 这是什么？</div>
+    AI 扫描了本次搜索的 ${commerce.noteCount} 篇相关笔记，提取出被高频提及的商品，帮你省去逐篇对比的时间。点击「去购买」可直接在平台内完成下单。
+  `;
+  list.appendChild(tooltip);
+
+  // 前2篇笔记
+  notes.slice(0, 2).forEach(n => list.appendChild(makeNoteCard(n)));
+
+  // 商业化卡片
+  list.appendChild(makeCommerceCard(commerce, query));
+
+  // 后4篇笔记
+  notes.slice(2).forEach(n => list.appendChild(makeNoteCard(n)));
+
+  document.getElementById('resultsArea').classList.add('show');
+}
+
+function makeNoteCard(note) {
+  const div = document.createElement('div');
+  div.className = 'note-card';
+  const avatarColors = ['#FF2442','#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#DDA0DD'];
+  const ac = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+  const initials = note.author.charAt(0);
+  const likesStr = note.likes >= 1000 ? (note.likes/1000).toFixed(1) + 'k' : note.likes;
+
+  div.innerHTML = `
+    <div class="note-thumb" style="background:${note.color}">${note.emoji}</div>
+    <div class="note-body">
+      <div class="note-title">${note.title}</div>
+      <div class="note-desc">${note.desc}</div>
+      <div class="note-meta">
+        <div class="note-avatar" style="background:${ac}">${initials}</div>
+        <span class="note-author">${note.author}</span>
+        <span class="note-likes">❤️ ${likesStr}</span>
+      </div>
+    </div>`;
+  return div;
+}
+
+function makeCommerceCard(commerce, query) {
+  const rankClasses = ['rank-1','rank-2','rank-3'];
+  const maxPct = commerce.items[0].mentionPct;
+
+  let itemsHtml = commerce.items.map((item, i) => `
+    <div class="commerce-item">
+      <div class="item-rank ${rankClasses[i] || 'rank-other'}">${i+1}</div>
+      <div class="item-img">${item.emoji}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-mention">
+          <div class="item-mention-bar" style="width:60px">
+            <div class="item-mention-fill" style="width:${Math.round(item.mentionPct/maxPct*100)}%"></div>
+          </div>
+          ${item.mentionPct}% 笔记提及
+        </div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:3px">${item.reason}</div>
+      </div>
+      <div class="item-right">
+        <div class="item-price"><span class="item-price-small">¥</span>${item.price}</div>
+        <button class="btn-buy" onclick="handleBuy('${item.name}')">去购买</button>
+      </div>
+    </div>`).join('');
+
+  const div = document.createElement('div');
+  div.className = 'commerce-card';
+  div.innerHTML = `
+    <div class="concept-badge">概念演示</div>
+    <div class="commerce-header">
+      <div class="commerce-label">
+        <div class="commerce-label-dot"></div>
+        笔记高频提及 · AI 整理
+      </div>
+      <div class="commerce-count">综合 ${commerce.noteCount} 篇笔记</div>
+    </div>
+    <div class="commerce-items">${itemsHtml}</div>
+    <div class="commerce-footer">
+      <div class="commerce-footer-text">价格实时同步 · 平台内完成交易</div>
+      <div class="commerce-more">查看全部 ›</div>
+    </div>`;
+  return div;
+}
+
+function handleBuy(name) {
+  alert(`跳转购买：${name}\n\n（演示版本，实际产品会在平台内完成交易，不跳出小红书）`);
+}
+</script>
+</body>
+</html>
