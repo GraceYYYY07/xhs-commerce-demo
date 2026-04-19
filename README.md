@@ -1,1 +1,1 @@
-https://xhs-commerce-demo.vercel.app/
+demo link: https://xhs-commerce-demo.vercel.app/
